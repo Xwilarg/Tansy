@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using System.Text.Json;
+using Tansy.Arena;
 
 namespace Tansy
 {
@@ -46,6 +47,20 @@ namespace Tansy
             {
                 var content = msg.Content[pos..];
                 var commandStr = content.Split(' ')[0].ToUpperInvariant();
+
+                switch (commandStr)
+                {
+                    case "START":
+                        if (StaticObjects.LobbyManager.Has(msg.Channel.Id))
+                        {
+                            await msg.Channel.SendMessageAsync("There is already a pending lobby", messageReference: new(msg.Id));
+                        }
+                        else
+                        {
+                            StaticObjects.LobbyManager.Add(msg.Channel.Id, new(msg.Author));
+                        }
+                        break;
+                }
             }
         }
     }
