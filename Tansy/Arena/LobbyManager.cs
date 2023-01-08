@@ -15,12 +15,16 @@ namespace Tansy.Arena
             };
             timer.Elapsed += async (sender, _) =>
             {
+                // Time up, we remove the lobby and launch a game
                 var targetChannel = lobby.Message.Channel;
                 await lobby.Message.DeleteAsync();
                 var startMsg = await targetChannel.SendMessageAsync(lobby.GetStartMessage());
+
                 await Task.Delay(2000);
                 await startMsg.DeleteAsync();
+
                 StaticObjects.GameManager.Add(targetChannel.Id, new((ITextChannel)targetChannel, lobby.Users));
+
                 _lobbies.Remove(channelId);
                 timer.Enabled = false;
             };
