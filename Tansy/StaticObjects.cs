@@ -8,12 +8,13 @@ namespace Tansy
     {
         public static DiscordSocketClient Client { get; } = new(new DiscordSocketConfig
         {
-            GatewayIntents = GatewayIntents.GuildMessages | GatewayIntents.MessageContent
+            GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent
         });
 
         public static Random Random { get; } = new();
 
         public static LobbyManager LobbyManager { get; } = new();
+        public static GameManager GameManager { get; } = new();
 
         private static int _id = 0;
         public static int UniqueId

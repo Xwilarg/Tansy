@@ -51,7 +51,11 @@ namespace Tansy
                 switch (commandStr)
                 {
                     case "START":
-                        if (StaticObjects.LobbyManager.Has(msg.Channel.Id))
+                        if (StaticObjects.GameManager.Has(msg.Channel.Id))
+                        {
+                            await msg.Channel.SendMessageAsync("A game is already running", messageReference: new(msg.Id));
+                        }
+                        else if (StaticObjects.LobbyManager.Has(msg.Channel.Id))
                         {
                             await msg.Channel.SendMessageAsync("There is already a pending lobby", messageReference: new(msg.Id));
                         }
@@ -64,7 +68,11 @@ namespace Tansy
                         break;
 
                     case "JOIN":
-                        if (!StaticObjects.LobbyManager.Has(msg.Channel.Id))
+                        if (StaticObjects.GameManager.Has(msg.Channel.Id))
+                        {
+                            await msg.Channel.SendMessageAsync("A game is already running", messageReference: new(msg.Id));
+                        }
+                        else if (!StaticObjects.LobbyManager.Has(msg.Channel.Id))
                         {
                             await msg.Channel.SendMessageAsync("There is no pending lobby", messageReference: new(msg.Id));
                         }
@@ -87,6 +95,10 @@ namespace Tansy
                         return;
                 }
 
+                await msg.DeleteAsync();
+            }
+            else if (StaticObjects.GameManager.Has(msg.Channel.Id) && msg.Author.Id != 1061455326316089424) // Bot ID
+            {
                 await msg.DeleteAsync();
             }
         }

@@ -16,7 +16,7 @@ namespace Tansy.Arena
             {
                 Title = "Lobby",
                 Description = string.Join("\n", _users.Select(x => x.Mention))
-                + $"\n\nStarts <t:{(_initTime.AddSeconds(ReadyUpDuration) - new DateTime(1970, 1, 1)).TotalSeconds}:R>"
+                + $"\n\nStarts <t:{(int)(_initTime.AddSeconds(ReadyUpDuration) - new DateTime(1970, 1, 1)).TotalSeconds}:R>"
             }.Build();
         }
 
@@ -30,6 +30,8 @@ namespace Tansy.Arena
 
         public void Join(IUser user)
             => _users.Add(user);
+
+        public List<IUser> Users => _users;
 
         public IUserMessage Message { set; get; }
         private readonly List<IUser> _users = new();
