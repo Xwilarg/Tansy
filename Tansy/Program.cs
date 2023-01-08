@@ -57,10 +57,37 @@ namespace Tansy
                         }
                         else
                         {
-                            StaticObjects.LobbyManager.Add(msg.Channel.Id, new(msg.Author));
+                            var lobby = new Lobby(msg.Author);
+                            StaticObjects.LobbyManager.Add(msg.Channel.Id, lobby);
+                            lobby.Message = await msg.Channel.SendMessageAsync(embed: lobby.GetEmbed());
                         }
                         break;
+
+                    case "JOIN":
+                        if (!StaticObjects.LobbyManager.Has(msg.Channel.Id))
+                        {
+                            await msg.Channel.SendMessageAsync("There is no pending lobby", messageReference: new(msg.Id));
+                        }
+                        else
+                        {
+                            var lobby = StaticObjects.LobbyManager.Get(msg.Channel.Id);
+                            if (lobby.HasUser(msg.Author.Id))
+                            {
+                                await msg.Channel.SendMessageAsync("You already joined this lobby", messageReference: new(msg.Id));
+                            }
+                            else
+                            {
+                                lobby.Join(msg.Author);
+                                await lobby.Message.ModifyAsync(x => x.Embed = lobby.GetEmbed());
+                            }
+                        }
+                        break;
+
+                    default:
+                        return;
                 }
+
+                await msg.DeleteAsync();
             }
         }
     }
