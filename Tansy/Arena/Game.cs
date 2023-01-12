@@ -25,15 +25,17 @@ namespace Tansy.Arena
                 _round++;
                 if (_round < _maxRound)
                 {
+                    _turnStartTime = DateTime.UtcNow;
                     await _statusMessage.ModifyAsync(x => x.Embed = GetStatusMessage());
                 }
                 else
                 {
                     await _channel.SendMessageAsync("End of test, deleting lobby");
                     StaticObjects.GameManager.Remove(_channel.Id);
+                    timer.Enabled = false;
                 }
             };
-            timer.Interval = 2000;
+            timer.Interval = _turnDuration;
             timer.Enabled = true;
         }
 
@@ -42,7 +44,16 @@ namespace Tansy.Arena
             return new EmbedBuilder
             {
                 Title = $"Round {_round + 1} / {_maxRound}",
-                Description = string.Join("\n", _users)
+                Description = string.Join("\n", _users),
+                Fields = new()
+                {
+                    new()
+                    {
+                        Name = "Turn ends",
+                        Value = $"<t:{(int)(_turnStartTime.AddSeconds(_turnDuration) - new DateTime(1970, 1, 1)).TotalSeconds}:R>",
+                        IsInline = true
+                    }
+                }
             }.Build();
         }
 
@@ -50,5 +61,9 @@ namespace Tansy.Arena
         private int _round, _maxRound = 3;
         private ITextChannel _channel;
         private IEnumerable<ArenaUser> _users;
+
+        private DateTime _turnStartTime;
+
+        private const int _turnDuration = 10000;
     }
 }
