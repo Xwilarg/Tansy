@@ -38,17 +38,13 @@ namespace Tansy.Arena
                 if (_round < _maxRound)
                 {
                     _globalLog.AppendLine();
-                    _globalLog.AppendLine($"**Round {_round}**");
+                    _globalLog.AppendLine($"**Round {(_round + 1)}**");
                     _turnStartTime = DateTime.UtcNow;
                     await _statusMessage.ModifyAsync(x => x.Embed = GetStatusMessage());
                 }
                 else
                 {
-                    await _statusMessage.ModifyAsync(x => x.Embed = new EmbedBuilder
-                    {
-                        Title = "Game ended",
-                        Color = Color.Green
-                    }.Build());
+                    await _statusMessage.ModifyAsync(x => x.Embed = GetEndEmbed());
                     StaticObjects.GameManager.Remove(_channel.Id);
                     timer.Enabled = false;
                 }
@@ -84,6 +80,24 @@ namespace Tansy.Arena
                         IsInline = false
                     }
                 }
+            }.Build();
+        }
+
+        private Embed GetEndEmbed()
+        {
+            return new EmbedBuilder
+            {
+                Title = $"Game Ended",
+                Fields = new()
+                {
+                    new()
+                    {
+                        Name = "Log",
+                        Value = _globalLog.ToString(),
+                        IsInline = false
+                    }
+                },
+                Color = Color.Green
             }.Build();
         }
 
