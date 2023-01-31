@@ -17,6 +17,7 @@ namespace Tansy.Arena
                 _users = users.Select(x => new ArenaUser(x));
             }
 
+            _turnStartTime = DateTime.UtcNow;
             _statusMessage = channel.SendMessageAsync(embed: GetStatusMessage()).GetAwaiter().GetResult();
 
             System.Timers.Timer timer = new();
@@ -30,7 +31,11 @@ namespace Tansy.Arena
                 }
                 else
                 {
-                    await _channel.SendMessageAsync("End of test, deleting lobby");
+                    await _statusMessage.ModifyAsync(x => x.Embed = new EmbedBuilder
+                    {
+                        Title = "Game ended",
+                        Color = Color.Green
+                    }.Build());
                     StaticObjects.GameManager.Remove(_channel.Id);
                     timer.Enabled = false;
                 }
@@ -50,7 +55,7 @@ namespace Tansy.Arena
                     new()
                     {
                         Name = "Turn ends",
-                        Value = $"<t:{(int)(_turnStartTime.AddSeconds(_turnDuration) - new DateTime(1970, 1, 1)).TotalSeconds}:R>",
+                        Value = $"<t:{(int)(_turnStartTime.AddSeconds(_turnDuration / 1000) - new DateTime(1970, 1, 1)).TotalSeconds}:R>",
                         IsInline = true
                     }
                 }
