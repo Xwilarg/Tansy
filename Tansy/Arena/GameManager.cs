@@ -13,6 +13,9 @@ namespace Tansy.Arena
         public void Remove(ulong channelId)
             => _games.Remove(channelId);
 
+        public Game Get(ulong channelId)
+            => _games[channelId];
+
         private readonly Dictionary<ulong, Game> _games = new();
     }
 }

@@ -1,9 +1,11 @@
 ﻿using Discord;
+using System.Text;
+using System.Text.RegularExpressions;
 using Tansy.Arena.Fighter;
 
 namespace Tansy.Arena
 {
-    public class Game
+    public partial class Game
     {
         public Game(ITextChannel channel, List<IUser> users)
         {
@@ -14,18 +16,29 @@ namespace Tansy.Arena
             }
             else
             {
-                _users = users.Select(x => new ArenaUser(x));
+                _users = users.Select(x => new ArenaUser(x)).OrderBy(x => StaticObjects.Random.Next());
             }
 
+            _globalLog.AppendLine("**Round 1**");
             _turnStartTime = DateTime.UtcNow;
             _statusMessage = channel.SendMessageAsync(embed: GetStatusMessage()).GetAwaiter().GetResult();
 
             System.Timers.Timer timer = new();
             timer.Elapsed += async (sender, _) =>
             {
+                foreach (var user in _users)
+                {
+                    if (user.IsAlive)
+                    {
+                        _globalLog.AppendLine(user.Resolve());
+                    }
+                    user.EndTurn();
+                }
                 _round++;
                 if (_round < _maxRound)
                 {
+                    _globalLog.AppendLine();
+                    _globalLog.AppendLine($"**Round {_round}**");
                     _turnStartTime = DateTime.UtcNow;
                     await _statusMessage.ModifyAsync(x => x.Embed = GetStatusMessage());
                 }
@@ -57,9 +70,57 @@ namespace Tansy.Arena
                         Name = "Turn ends",
                         Value = $"<t:{(int)(_turnStartTime.AddSeconds(_turnDuration / 1000) - new DateTime(1970, 1, 1)).TotalSeconds}:R>",
                         IsInline = true
+                    },
+                    new()
+                    {
+                        Name = "Pending Actions",
+                        Value = string.Join("\n", _users.Select(x => $"{x.Name}: {(x.IsActionDone ? "✅" : "❌")}")),
+                        IsInline = false
+                    },
+                    new()
+                    {
+                        Name = "Log",
+                        Value = _globalLog.ToString(),
+                        IsInline = false
                     }
                 }
             }.Build();
+        }
+
+        private ArenaUser? Parse(string id)
+        {
+            var m = UserRegex().Match(id);
+            if (m.Success)
+            {
+                return _users.FirstOrDefault(x => x.Is(m.Groups[1].Value));
+            }
+            return _users.FirstOrDefault(x => x.Is(id));
+        }
+
+        public async Task ParseActionAsync(IUser user, string command)
+        {
+            var me = Parse($"{user.Id}");
+            if (me == null)
+            {
+                return; // User not in arena
+            }
+            var s = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (s.Length != 2)
+            {
+                return; // Invalid number of arguments
+            }
+            switch (s[0])
+            {
+                case "ATTACK":
+                    var target = Parse(s[1]);
+                    if (target == null)
+                    {
+                        return; // Invalid target
+                    }
+                    me.SetAction(ActionType.ATTACK, target);
+                    await _statusMessage.ModifyAsync(x => x.Embed = GetStatusMessage());
+                    break;
+            }
         }
 
         private IUserMessage _statusMessage;
@@ -70,5 +131,10 @@ namespace Tansy.Arena
         private DateTime _turnStartTime;
 
         private const int _turnDuration = 10000;
+
+        private StringBuilder _globalLog = new();
+
+        [GeneratedRegex("<@([0-9]+)>")]
+        private static partial Regex UserRegex();
     }
 }

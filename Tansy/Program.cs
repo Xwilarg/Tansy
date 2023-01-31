@@ -45,8 +45,8 @@ namespace Tansy
             int pos = 0;
             if (msg.HasMentionPrefix(StaticObjects.Client.CurrentUser, ref pos))
             {
-                var content = msg.Content[pos..];
-                var commandStr = content.Split(' ')[0].ToUpperInvariant();
+                var content = msg.Content[pos..].ToUpperInvariant();
+                var commandStr = content.Split(' ')[0];
 
                 switch (commandStr)
                 {
@@ -92,13 +92,13 @@ namespace Tansy
                         break;
 
                     default:
-                        return;
+                        if (StaticObjects.GameManager.Has(msg.Channel.Id))
+                        {
+                            await StaticObjects.GameManager.Get(msg.Channel.Id).ParseActionAsync(msg.Author, content);
+                        }
+                        break;
                 }
 
-                await msg.DeleteAsync();
-            }
-            else if (StaticObjects.GameManager.Has(msg.Channel.Id) && msg.Author.Id != 1061455326316089424) // Bot ID
-            {
                 await msg.DeleteAsync();
             }
         }
